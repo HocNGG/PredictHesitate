@@ -22,7 +22,7 @@ const features = [
 export function Features() {
   return (
     <section className="py-24 md:py-32 relative">
-      <div className="container px-4 md:px-6">
+      <div className="container mx-auto px-4 md:px-6">
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-4">
@@ -32,17 +32,17 @@ export function Features() {
             Our platform combines cutting-edge AI technology with comprehensive data analytics to deliver accurate predictions.
           </p>
         </div>
-        
+
         {/* Feature Cards */}
         <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
           {features.map((feature, index) => (
-            <Card 
+            <Card
               key={index}
               className="group relative overflow-hidden border-border/50 bg-card/50 backdrop-blur-sm hover:border-primary/50 transition-all duration-300"
             >
               {/* Gradient overlay on hover */}
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              
+
               <CardHeader className="relative">
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
                   <feature.icon className="w-6 h-6 text-primary" />

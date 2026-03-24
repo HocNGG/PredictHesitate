@@ -83,10 +83,10 @@ export function PredictionForm({ onPredict, isLoading }: PredictionFormProps) {
                 value={formData.propertyType}
                 onValueChange={(value) => setFormData({ ...formData, propertyType: value })}
               >
-                <SelectTrigger id="propertyType" className="bg-input">
+                <SelectTrigger id="propertyType" className="bg-white text-black">
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white text-black">
                   {propertyTypes.map((type) => (
                     <SelectItem key={type} value={type}>
                       {type}
@@ -101,10 +101,10 @@ export function PredictionForm({ onPredict, isLoading }: PredictionFormProps) {
                 value={formData.district}
                 onValueChange={(value) => setFormData({ ...formData, district: value })}
               >
-                <SelectTrigger id="district" className="bg-input">
+                <SelectTrigger id="district" className="bg-white text-black">
                   <SelectValue placeholder="Select district" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white text-black">
                   {districts.map((district) => (
                     <SelectItem key={district} value={district}>
                       {district}
@@ -125,7 +125,7 @@ export function PredictionForm({ onPredict, isLoading }: PredictionFormProps) {
                 max={10000}
                 value={formData.area}
                 onChange={(e) => setFormData({ ...formData, area: Number(e.target.value) })}
-                className="bg-input"
+                className="bg-white text-black"
               />
             </div>
             <div className="space-y-2">
@@ -137,7 +137,7 @@ export function PredictionForm({ onPredict, isLoading }: PredictionFormProps) {
                 max={20}
                 value={formData.bedrooms}
                 onChange={(e) => setFormData({ ...formData, bedrooms: Number(e.target.value) })}
-                className="bg-input"
+                className="bg-white text-black"
               />
             </div>
             <div className="space-y-2">
@@ -149,7 +149,7 @@ export function PredictionForm({ onPredict, isLoading }: PredictionFormProps) {
                 max={50}
                 value={formData.floors}
                 onChange={(e) => setFormData({ ...formData, floors: Number(e.target.value) })}
-                className="bg-input"
+                className="bg-white text-black"
               />
             </div>
           </div>
@@ -164,14 +164,14 @@ export function PredictionForm({ onPredict, isLoading }: PredictionFormProps) {
               placeholder="e.g., 5.5"
               value={formData.frontage || ""}
               onChange={(e) => setFormData({ ...formData, frontage: e.target.value ? Number(e.target.value) : undefined })}
-              className="bg-input"
+              className="bg-white text-black"
             />
           </div>
 
           <Button
             type="submit"
             size="lg"
-            className="w-full bg-primary hover:bg-primary/90"
+            className="w-full bg-primary text-white hover:bg-primary/90"
             disabled={isLoading || !formData.propertyType || !formData.district}
           >
             {isLoading ? (

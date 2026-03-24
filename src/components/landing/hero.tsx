@@ -14,7 +14,7 @@ export function Hero() {
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[oklch(0.5_0.2_275)] rounded-full blur-3xl opacity-20 animate-pulse" />
       <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-[oklch(0.45_0.2_260)] rounded-full blur-3xl opacity-15 animate-pulse" style={{ animationDelay: '1s' }} />
 
-      <div className="container relative z-10 px-4 md:px-6 py-24 md:py-32">
+      <div className="container relative z-10 mx-auto px-4 md:px-6 py-24 md:py-32">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left Content */}
           <div className="flex flex-col gap-6 text-center lg:text-left">
