@@ -6,7 +6,7 @@ import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Responsive
 // Generate mock scatter data
 const generateScatterData = () => {
   const data = []
-  for (let i = 0; i < 100; i++) {
+  for (let i=0; i<100; i++) {
     const area = 30 + Math.random() * 270
     const priceBase = area * 50 + Math.random() * 3000
     data.push({

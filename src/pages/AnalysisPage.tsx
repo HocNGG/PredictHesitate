@@ -1,4 +1,3 @@
-"use client"
 
 import { Navigation } from "@/components/predict/navigation"
 import { PriceDistributionChart } from "@/components/charts/price-distribution"
