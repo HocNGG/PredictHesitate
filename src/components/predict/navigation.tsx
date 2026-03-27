@@ -4,7 +4,6 @@ import { useLocation } from "react-router-dom"
 
 import { Brain, BarChart3, Home } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { ModeToggle } from "@/components/mode-toggle"
 
 export function Navigation() {
   const location = useLocation()
@@ -46,7 +45,6 @@ export function Navigation() {
               )
             })}
           </nav>
-          <ModeToggle />
         </div>
       </div>
     </header>

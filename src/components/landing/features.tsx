@@ -25,10 +25,11 @@ export function Features() {
       <div className="container mx-auto px-4 md:px-6">
         {/* Section Header */}
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-4">
+          {/* <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-4"> */}
+          <h2 className="text-3xl md:text-4xl font-bold track-tight text-foreground mb-4">
             Powerful Features
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-pretty">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-pretty">            
             Our platform combines cutting-edge AI technology with comprehensive data analytics to deliver accurate predictions.
           </p>
         </div>

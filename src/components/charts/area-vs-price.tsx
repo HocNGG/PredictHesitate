@@ -1,4 +1,3 @@
-"use client"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
@@ -6,7 +5,7 @@ import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Responsive
 // Generate mock scatter data
 const generateScatterData = () => {
   const data = []
-  for (let i=0; i<100; i++) {
+  for (let i = 0; i < 100; i++) {
     const area = 30 + Math.random() * 270
     const priceBase = area * 50 + Math.random() * 3000
     data.push({
@@ -31,21 +30,21 @@ export function AreaVsPriceChart() {
           <ResponsiveContainer width="100%" height="100%">
             <ScatterChart margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-              <XAxis 
-                type="number" 
-                dataKey="area" 
-                name="Area" 
+              <XAxis
+                type="number"
+                dataKey="area"
+                name="Area"
                 unit="m²"
-                tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} 
+                tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
                 axisLine={{ stroke: "var(--border)" }}
                 tickLine={{ stroke: "var(--border)" }}
               />
-              <YAxis 
-                type="number" 
-                dataKey="price" 
-                name="Price" 
+              <YAxis
+                type="number"
+                dataKey="price"
+                name="Price"
                 unit="B"
-                tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} 
+                tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
                 axisLine={{ stroke: "var(--border)" }}
                 tickLine={{ stroke: "var(--border)" }}
               />
