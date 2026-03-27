@@ -40,15 +40,12 @@ export function HowItWorks() {
 
         {/* Steps */}
         <div className="grid md:grid-cols-3 gap-8 lg:gap-12 relative">
-          {/* Connecting line for desktop */}
-          <div className="hidden md:block absolute top-16 left-1/6 right-1/6 h-0.5 bg-gradient-to-r from-primary/50 via-accent/50 to-primary/50" />
-
           {steps.map((step, index) => (
             <div key={index} className="relative flex flex-col items-center text-center">
               {/* Step number circle */}
               <div className="relative mb-6">
-                <div className="w-32 h-32 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center border border-border/50">
-                  <div className="w-24 h-24 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center border border-border/30">
+                <div className="w-32 h-32 rounded-full flex items-center justify-center border border-border/50">
+                  <div className="w-24 h-24 rounded-full flex items-center justify-center border border-border/30">
                     <step.icon className="w-10 h-10 text-primary" />
                   </div>
                 </div>
