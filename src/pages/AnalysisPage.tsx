@@ -4,10 +4,11 @@ import { PriceDistributionChart } from "@/components/charts/price-distribution"
 import { AreaVsPriceChart } from "@/components/charts/area-vs-price"
 import { DistrictComparisonChart } from "@/components/charts/district-comparison"
 import { FeatureImportanceChart } from "@/components/charts/feature-importance"
+import { ChatBox } from "@/components/ChatBox"
 
 export default function AnalysisPage() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
       <Navigation />
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
@@ -23,6 +24,9 @@ export default function AnalysisPage() {
           <FeatureImportanceChart />
         </div>
       </main>
+      
+      {/* Floating Chat Box */}
+      <ChatBox />
     </div>
   )
-}
+}
