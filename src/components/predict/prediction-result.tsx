@@ -1,14 +1,24 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { TrendingUp, DollarSign, Bot, User } from "lucide-react"
 import type { PredictionInput } from "./prediction-form"
+import { getDistrictLabel, getPropertyTypeLabel } from "@/constants/predict-options"
 
 interface PredictionResultProps {
   result: {
-    price: number
-    pricePerSqm: number
+    predicted_price_per_m2: number | null
+    predicted_total_price: number | null
     input: PredictionInput
   } | null
+}
+
+function formatTriệuPerM2(value: number | null) {
+  if (value == null) return "—"
+  return `${value.toLocaleString("vi-VN", { maximumFractionDigits: 2 })} triệu/m²`
+}
+
+function formatTriệuTotal(value: number | null) {
+  if (value == null) return "—"
+  return `${value.toLocaleString("vi-VN", { maximumFractionDigits: 2 })} triệu VND`
 }
 
 export function PredictionResult({ result }: PredictionResultProps) {
@@ -18,29 +28,23 @@ export function PredictionResult({ result }: PredictionResultProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-xl">
             <TrendingUp className="h-5 w-5 text-primary" />
-            Prediction Result
+            Kết quả dự đoán
           </CardTitle>
-          <CardDescription>
-            Fill in the property details and click predict to see the AI estimation
-          </CardDescription>
+          <CardDescription>Điền form và bấm dự đoán để xem giá từ API</CardDescription>
         </CardHeader>
         <CardContent className="flex min-h-[300px] items-center justify-center">
           <div className="text-center text-muted-foreground">
             <DollarSign className="mx-auto h-12 w-12 opacity-20" />
-            <p className="mt-4">No prediction yet</p>
-            <p className="text-sm">Enter property details to get started</p>
+            <p className="mt-4">Chưa có kết quả</p>
+            <p className="text-sm">Nhập thông tin BĐS và gửi yêu cầu</p>
           </div>
         </CardContent>
       </Card>
     )
   }
 
-  const formatCurrency = (value: number) => {
-    if (value >= 1e9) {
-      return `${(value / 1e9).toFixed(2)} tỷ VND`
-    }
-    return `${(value / 1e6).toFixed(0)} triệu VND`
-  }
+  const typeLabel = getPropertyTypeLabel(result.input.propertyTypeId)
+  const districtLabel = getDistrictLabel(result.input.districtId)
 
   return (
     <div className="space-y-4">
@@ -48,22 +52,22 @@ export function PredictionResult({ result }: PredictionResultProps) {
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-xl">
             <TrendingUp className="h-5 w-5 text-accent" />
-            Prediction Result
+            Kết quả từ backend
           </CardTitle>
-          <CardDescription>AI-powered price estimation for your property</CardDescription>
+          <CardDescription>Giá theo triệu VND/m² và tổng giá (triệu VND) như response API</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="rounded-xl bg-accent/10 p-6 text-center">
-            <p className="mb-2 text-sm font-medium text-accent">Predicted Price</p>
-            <p className="text-4xl font-bold text-accent">{formatCurrency(result.price)}</p>
+            <p className="mb-2 text-sm font-medium text-accent">Tổng giá dự đoán</p>
+            <p className="text-4xl font-bold text-accent">{formatTriệuTotal(result.predicted_total_price)}</p>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="rounded-lg bg-secondary p-4 text-center">
-              <p className="text-xs font-medium text-muted-foreground">Price per m²</p>
-              <p className="mt-1 text-lg font-semibold">{formatCurrency(result.pricePerSqm)}</p>
+              <p className="text-xs font-medium text-muted-foreground">Giá / m²</p>
+              <p className="mt-1 text-lg font-semibold">{formatTriệuPerM2(result.predicted_price_per_m2)}</p>
             </div>
             <div className="rounded-lg bg-secondary p-4 text-center">
-              <p className="text-xs font-medium text-muted-foreground">Total Area</p>
+              <p className="text-xs font-medium text-muted-foreground">Diện tích</p>
               <p className="mt-1 text-lg font-semibold">{result.input.area} m²</p>
             </div>
           </div>
@@ -74,7 +78,7 @@ export function PredictionResult({ result }: PredictionResultProps) {
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Bot className="h-5 w-5 text-primary" />
-            AI Explanation
+            Tóm tắt đầu vào
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -85,7 +89,7 @@ export function PredictionResult({ result }: PredictionResultProps) {
               </div>
               <div className="rounded-2xl rounded-tl-none bg-secondary px-4 py-2">
                 <p className="text-sm">
-                  Why is the predicted price {formatCurrency(result.price)} for this {result.input.propertyType.toLowerCase()} in {result.input.district}?
+                  {typeLabel} tại {districtLabel}, {result.input.area} m²
                 </p>
               </div>
             </div>
@@ -94,40 +98,26 @@ export function PredictionResult({ result }: PredictionResultProps) {
                 <Bot className="h-4 w-4 text-primary-foreground" />
               </div>
               <div className="rounded-2xl rounded-tl-none bg-primary/10 px-4 py-3">
-                <p className="text-sm leading-relaxed">
-                  Based on our machine learning analysis of Ho Chi Minh City real estate data, here are the key factors:
-                </p>
-                <ul className="mt-3 space-y-2 text-sm">
-                  <li className="flex items-start gap-2">
-                    <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-                    <span>
-                      <strong>Location:</strong> {result.input.district} is a {result.input.district.includes("1") || result.input.district.includes("3") ? "premium" : "developing"} area with {result.input.district.includes("1") || result.input.district.includes("3") ? "high" : "moderate"} demand
-                    </span>
+                <ul className="space-y-2 text-sm leading-relaxed">
+                  <li>
+                    <strong>Loại:</strong> {typeLabel} (mã {result.input.propertyTypeId})
                   </li>
-                  <li className="flex items-start gap-2">
-                    <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-                    <span>
-                      <strong>Property Type:</strong> {result.input.propertyType}s in this district typically range from {formatCurrency(result.price * 0.8)} to {formatCurrency(result.price * 1.2)}
-                    </span>
+                  <li>
+                    <strong>Địa chỉ:</strong> {districtLabel} (mã {result.input.districtId})
                   </li>
-                  <li className="flex items-start gap-2">
-                    <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-                    <span>
-                      <strong>Size & Layout:</strong> {result.input.area}m² with {result.input.bedrooms} bedrooms across {result.input.floors} floor{result.input.floors > 1 ? "s" : ""} is considered {result.input.area > 100 ? "spacious" : "standard"} for this property type
-                    </span>
+                  <li>
+                    <strong>Tọa độ:</strong> {result.input.lat}, {result.input.lng}
                   </li>
-                  {result.input.frontage && (
-                    <li className="flex items-start gap-2">
-                      <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-                      <span>
-                        <strong>Frontage:</strong> {result.input.frontage}m frontage width adds {result.input.frontage > 5 ? "significant" : "moderate"} value to the property
-                      </span>
-                    </li>
-                  )}
+                  <li>
+                    <strong>Mặt tiền:</strong> {result.input.frontage == null ? "null" : `${result.input.frontage} m`}
+                  </li>
+                  <li>
+                    <strong>Phòng ngủ:</strong> {result.input.bedrooms == null ? "null" : result.input.bedrooms}
+                  </li>
+                  <li>
+                    <strong>Số tầng:</strong> {result.input.floors == null ? "null" : result.input.floors}
+                  </li>
                 </ul>
-                <p className="mt-3 text-xs text-muted-foreground">
-                  Confidence: 87% | Model: Gradient Boosting v2.3
-                </p>
               </div>
             </div>
           </div>

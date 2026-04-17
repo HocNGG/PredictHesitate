@@ -1,117 +1,23 @@
-import { useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { Activity, History, RefreshCcw } from "lucide-react"
 import { Line, LineChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 
 import { Navigation } from "@/components/predict/navigation"
+import {
+  getRetrainHistory,
+  getRetrainMetricsTrend,
+  getRetrainStatus,
+  triggerRetrain,
+  type RetrainHistoryItem,
+  type RetrainHistoryResponse,
+  type RetrainMetricsTrendResponse,
+  type RetrainRunStatus,
+  type RetrainStatusResponse,
+} from "@/api/retrain"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-
-type RetrainStatus = "running" | "idle"
-type RunStatus = "success" | "running" | "failed" | "skipped"
-
-type HistoryItem = {
-  id: number
-  triggered_at: string
-  status: RunStatus
-  new_rows: number | null
-  total_rows: number | null
-  duration_sec: number | null
-  model_replaced: boolean | null
-  metrics: {
-    rmse: number
-    mae: number
-    r2: number
-    prev_rmse: number | null
-    prev_mae: number | null
-    prev_r2: number | null
-  } | null
-}
-
-const mockRetrainStatus: { status: RetrainStatus; last_run: HistoryItem | null } = {
-  status: "idle",
-  last_run: {
-    id: 14,
-    triggered_at: "2026-04-16T09:40:00Z",
-    status: "success",
-    new_rows: 112,
-    total_rows: 1987,
-    duration_sec: 86.2,
-    model_replaced: true,
-    metrics: {
-      rmse: 0.22,
-      mae: 0.16,
-      r2: 0.9,
-      prev_rmse: 0.24,
-      prev_mae: 0.17,
-      prev_r2: 0.89,
-    },
-  },
-}
-
-const mockMetricTrend = {
-  runs: [
-    { run_id: 10, date: "2026-01-15T00:00:00Z", rmse: 0.29, mae: 0.2, r2: 0.84 },
-    { run_id: 11, date: "2026-02-10T00:00:00Z", rmse: 0.27, mae: 0.19, r2: 0.86 },
-    { run_id: 12, date: "2026-03-07T00:00:00Z", rmse: 0.25, mae: 0.18, r2: 0.88 },
-    { run_id: 13, date: "2026-03-29T00:00:00Z", rmse: 0.24, mae: 0.17, r2: 0.89 },
-    { run_id: 14, date: "2026-04-16T00:00:00Z", rmse: 0.22, mae: 0.16, r2: 0.9 },
-  ],
-}
-
-const mockHistory: HistoryItem[] = [
-  {
-    id: 14,
-    triggered_at: "2026-04-16T09:40:00Z",
-    status: "success",
-    new_rows: 112,
-    total_rows: 1987,
-    duration_sec: 86.2,
-    model_replaced: true,
-    metrics: { rmse: 0.22, mae: 0.16, r2: 0.9, prev_rmse: 0.24, prev_mae: 0.17, prev_r2: 0.89 },
-  },
-  {
-    id: 13,
-    triggered_at: "2026-03-29T05:20:00Z",
-    status: "success",
-    new_rows: 95,
-    total_rows: 1875,
-    duration_sec: 90.5,
-    model_replaced: true,
-    metrics: { rmse: 0.24, mae: 0.17, r2: 0.89, prev_rmse: 0.25, prev_mae: 0.18, prev_r2: 0.88 },
-  },
-  {
-    id: 12,
-    triggered_at: "2026-03-07T02:30:00Z",
-    status: "failed",
-    new_rows: 82,
-    total_rows: 1780,
-    duration_sec: 41.3,
-    model_replaced: false,
-    metrics: null,
-  },
-  {
-    id: 11,
-    triggered_at: "2026-02-10T01:45:00Z",
-    status: "success",
-    new_rows: 140,
-    total_rows: 1698,
-    duration_sec: 94.8,
-    model_replaced: true,
-    metrics: { rmse: 0.27, mae: 0.19, r2: 0.86, prev_rmse: 0.3, prev_mae: 0.21, prev_r2: 0.83 },
-  },
-  {
-    id: 10,
-    triggered_at: "2026-01-15T10:00:00Z",
-    status: "skipped",
-    new_rows: 0,
-    total_rows: 1558,
-    duration_sec: 12.1,
-    model_replaced: false,
-    metrics: null,
-  },
-]
 
 function formatDate(value: string) {
   return new Date(value).toLocaleString("vi-VN", {
@@ -123,7 +29,7 @@ function formatDate(value: string) {
   })
 }
 
-function getStatusBadge(status: RunStatus) {
+function getStatusBadge(status: RetrainRunStatus) {
   if (status === "success") return <Badge className="bg-emerald-500 text-white hover:bg-emerald-500">success</Badge>
   if (status === "running") return <Badge className="bg-blue-500 text-white hover:bg-blue-500">running</Badge>
   if (status === "failed") return <Badge variant="destructive">failed</Badge>
@@ -132,15 +38,61 @@ function getStatusBadge(status: RunStatus) {
 
 export default function ModelManagementPage() {
   const [page, setPage] = useState(1)
-  const pageSize = 3
+  const pageSize = 10
+  const [statusData, setStatusData] = useState<RetrainStatusResponse | null>(null)
+  const [trendData, setTrendData] = useState<RetrainMetricsTrendResponse | null>(null)
+  const [historyData, setHistoryData] = useState<RetrainHistoryResponse | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isTriggering, setIsTriggering] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const pagedHistory = useMemo(() => {
-    const start = (page - 1) * pageSize
-    return mockHistory.slice(start, start + pageSize)
+  useEffect(() => {
+    const loadData = async () => {
+      setIsLoading(true)
+      setError(null)
+      try {
+        const [status, trend, history] = await Promise.all([
+          getRetrainStatus(),
+          getRetrainMetricsTrend(),
+          getRetrainHistory(page, pageSize),
+        ])
+        setStatusData(status)
+        setTrendData(trend)
+        setHistoryData(history)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load model management data.")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadData()
   }, [page])
 
-  const totalPages = Math.ceil(mockHistory.length / pageSize)
-  const isRetrainRunning = mockRetrainStatus.status === "running"
+  const handleTriggerRetrain = async () => {
+    setIsTriggering(true)
+    setError(null)
+    try {
+      await triggerRetrain()
+      const [status, trend, history] = await Promise.all([
+        getRetrainStatus(),
+        getRetrainMetricsTrend(),
+        getRetrainHistory(page, pageSize),
+      ])
+      setStatusData(status)
+      setTrendData(trend)
+      setHistoryData(history)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Trigger retrain failed.")
+    } finally {
+      setIsTriggering(false)
+    }
+  }
+
+  const isRetrainRunning = statusData?.status === "running"
+  const historyItems: RetrainHistoryItem[] = historyData?.items ?? []
+  const trendRuns = trendData?.runs ?? []
+  const totalPages = historyData ? Math.max(1, Math.ceil(historyData.total / historyData.size)) : 1
 
   return (
     <div className="min-h-screen bg-background">
@@ -153,11 +105,16 @@ export default function ModelManagementPage() {
               Monitor retrain status, model metrics trend, and retrain history.
             </p>
           </div>
-          <Button disabled={isRetrainRunning} className="gap-2">
+          <Button disabled={isRetrainRunning || isTriggering} className="gap-2" onClick={handleTriggerRetrain}>
             <RefreshCcw className="h-4 w-4" />
-            Trigger Retrain
+            {isTriggering ? "Triggering..." : "Trigger Retrain"}
           </Button>
         </div>
+        {error ? (
+          <div className="mb-6 rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            {error}
+          </div>
+        ) : null}
 
         <div className="grid gap-6 lg:grid-cols-3">
           <Card className="lg:col-span-1">
@@ -181,10 +138,29 @@ export default function ModelManagementPage() {
               </div>
               <div className="rounded-lg border p-4">
                 <p className="text-sm text-muted-foreground">Last run id</p>
-                <p className="mt-1 text-lg font-semibold">#{mockRetrainStatus.last_run?.id ?? "-"}</p>
+                <p className="mt-1 text-lg font-semibold">#{statusData?.last_run?.id ?? "-"}</p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {mockRetrainStatus.last_run ? formatDate(mockRetrainStatus.last_run.triggered_at) : "No run yet"}
+                  {statusData?.last_run ? formatDate(statusData.last_run.triggered_at) : "No run yet"}
                 </p>
+                <div className="mt-3 grid grid-cols-1 gap-2 text-sm text-muted-foreground">
+                  <p>
+                    Last run status:{" "}
+                    <span className="font-medium text-foreground">{statusData?.last_run?.status ?? "-"}</span>
+                  </p>
+                  <p>
+                    New rows: <span className="font-medium text-foreground">{statusData?.last_run?.new_rows ?? "-"}</span>
+                  </p>
+                  <p>
+                    Model replaced:{" "}
+                    <span className="font-medium text-foreground">
+                      {statusData?.last_run?.model_replaced == null
+                        ? "-"
+                        : statusData.last_run.model_replaced
+                          ? "Yes"
+                          : "No"}
+                    </span>
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -195,35 +171,43 @@ export default function ModelManagementPage() {
               <CardDescription>UI mẫu cho endpoint /retrain/metrics/trend</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-[320px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={mockMetricTrend.runs} margin={{ left: 12, right: 12, top: 8 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                    <XAxis
-                      dataKey="run_id"
-                      tick={{ fill: "var(--muted-foreground)" }}
-                      axisLine={{ stroke: "var(--border)" }}
-                      tickLine={{ stroke: "var(--border)" }}
-                    />
-                    <YAxis
-                      tick={{ fill: "var(--muted-foreground)" }}
-                      axisLine={{ stroke: "var(--border)" }}
-                      tickLine={{ stroke: "var(--border)" }}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "var(--card)",
-                        border: "1px solid var(--border)",
-                        borderRadius: "8px",
-                        color: "var(--foreground)",
-                      }}
-                    />
-                    <Line type="monotone" dataKey="rmse" stroke="var(--chart-1)" strokeWidth={2} dot />
-                    <Line type="monotone" dataKey="mae" stroke="var(--chart-2)" strokeWidth={2} dot />
-                    <Line type="monotone" dataKey="r2" stroke="var(--chart-5)" strokeWidth={2} dot />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
+              {isLoading ? (
+                <div className="flex h-[320px] items-center justify-center text-sm text-muted-foreground">Loading trend...</div>
+              ) : trendRuns.length === 0 ? (
+                <div className="flex h-[320px] items-center justify-center text-sm text-muted-foreground">
+                  No metrics trend data.
+                </div>
+              ) : (
+                <div className="h-[320px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={trendRuns} margin={{ left: 12, right: 12, top: 8 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                      <XAxis
+                        dataKey="run_id"
+                        tick={{ fill: "var(--muted-foreground)" }}
+                        axisLine={{ stroke: "var(--border)" }}
+                        tickLine={{ stroke: "var(--border)" }}
+                      />
+                      <YAxis
+                        tick={{ fill: "var(--muted-foreground)" }}
+                        axisLine={{ stroke: "var(--border)" }}
+                        tickLine={{ stroke: "var(--border)" }}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "var(--card)",
+                          border: "1px solid var(--border)",
+                          borderRadius: "8px",
+                          color: "var(--foreground)",
+                        }}
+                      />
+                      <Line type="monotone" dataKey="rmse" stroke="var(--chart-1)" strokeWidth={2} dot />
+                      <Line type="monotone" dataKey="mae" stroke="var(--chart-2)" strokeWidth={2} dot />
+                      <Line type="monotone" dataKey="r2" stroke="var(--chart-5)" strokeWidth={2} dot />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -251,7 +235,14 @@ export default function ModelManagementPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {pagedHistory.map((item) => (
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center text-muted-foreground">
+                      Loading history...
+                    </TableCell>
+                  </TableRow>
+                ) : null}
+                {historyItems.map((item) => (
                   <TableRow key={item.id}>
                     <TableCell className="font-medium">#{item.id}</TableCell>
                     <TableCell>{formatDate(item.triggered_at)}</TableCell>
@@ -259,7 +250,7 @@ export default function ModelManagementPage() {
                     <TableCell>{item.new_rows ?? "-"}</TableCell>
                     <TableCell>{item.total_rows ?? "-"}</TableCell>
                     <TableCell>{item.duration_sec?.toFixed(1) ?? "-"}</TableCell>
-                    <TableCell>{item.model_replaced ? "Yes" : "No"}</TableCell>
+                    <TableCell>{item.model_replaced == null ? "-" : item.model_replaced ? "Yes" : "No"}</TableCell>
                     <TableCell>
                       {item.metrics
                         ? `${item.metrics.rmse.toFixed(2)} / ${item.metrics.mae.toFixed(2)} / ${item.metrics.r2.toFixed(2)}`
@@ -267,11 +258,23 @@ export default function ModelManagementPage() {
                     </TableCell>
                   </TableRow>
                 ))}
+                {!isLoading && historyItems.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center text-muted-foreground">
+                      No retrain history found.
+                    </TableCell>
+                  </TableRow>
+                ) : null}
               </TableBody>
             </Table>
 
             <div className="mt-4 flex items-center justify-end gap-2">
-              <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((prev) => prev - 1)}>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={isLoading || page <= 1}
+                onClick={() => setPage((prev) => prev - 1)}
+              >
                 Previous
               </Button>
               <span className="text-sm text-muted-foreground">
@@ -280,7 +283,7 @@ export default function ModelManagementPage() {
               <Button
                 variant="outline"
                 size="sm"
-                disabled={page >= totalPages}
+                disabled={isLoading || page >= totalPages}
                 onClick={() => setPage((prev) => prev + 1)}
               >
                 Next
