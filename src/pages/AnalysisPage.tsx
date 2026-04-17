@@ -24,9 +24,7 @@ export default function AnalysisPage() {
           <FeatureImportanceChart />
         </div>
       </main>
-      
-      {/* Floating Chat Box */}
       <ChatBox />
     </div>
   )
-}
+}

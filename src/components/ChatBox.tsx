@@ -1,13 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageCircle, X, Send } from 'lucide-react';
 
-interface Message {
+// interface Message {
+//   id: string;
+//   text: string;
+//   sender: 'user' | 'bot';
+//   timestamp: string;
+// }
+
+interface Message{
   id: string;
   text: string;
-  sender: 'user' | 'bot';
+  sender: "bot" | "user";
   timestamp: string;
 }
-
 const initialMessages: Message[] = Array.from({ length: 20 }, (_, i) => ({
   id: `msg-${i}`,
   text: i % 2 === 0 ? `Hello! This is a bot message ${i + 1}.` : `Hi there! I'm the user. This is message ${i + 1}.`,

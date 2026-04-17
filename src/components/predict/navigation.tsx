@@ -2,7 +2,7 @@
 import { Link } from "react-router-dom"
 import { useLocation } from "react-router-dom"
 
-import { Brain, BarChart3, Home } from "lucide-react"
+import { Brain, BarChart3, Home, Cog } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 export function Navigation() {
@@ -12,6 +12,7 @@ export function Navigation() {
   const navItems = [
     { href: "/predict", label: "Predict", icon: Brain },
     { href: "/analysis", label: "Data Analysis", icon: BarChart3 },
+    { href: "/model-management", label: "Model Management", icon: Cog },
   ]
 
   return (
