@@ -1,13 +1,34 @@
 import { Button } from "@/components/ui/button"
 import { ArrowRight, BarChart3 } from "lucide-react"
 import { useNavigate } from "react-router-dom"
+import previewVideo from "@/assets/vid3.mov"
 
 export function Hero() {
   const navigate = useNavigate()
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Gradient Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-background via-[oklch(0.18_0.08_275)] to-[oklch(0.15_0.1_260)]" />
+    <section className="relative -mt-16 min-h-screen w-full pb-24 overflow-hidden font-['Inter','Segoe_UI',system-ui,-apple-system,BlinkMacSystemFont,sans-serif]">
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute"
+        style={{
+          filter: "brightness(0.8)",
+          top: "-4rem",
+          left: 0,
+          right: 0,
+          width: "100%",
+          height: "calc(100vh + 4rem)",
+          minHeight: "calc(100% + 4rem)",
+          objectFit: "cover",
+        }}
+      >
+        <source src={previewVideo} type="video/mp4" />
+      </video>
+
+      {/* Dark overlay to keep text readable */}
+      <div className="absolute inset-0 bg-black/40" />
 
       {/* Animated gradient orbs */}
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[oklch(0.5_0.2_275)] rounded-full blur-3xl opacity-20 animate-pulse" />
@@ -49,13 +70,13 @@ export function Hero() {
               <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-accent/30 rounded-3xl blur-2xl" />
 
               {/* Image container */}
-              <div className="relative rounded-3xl overflow-hidden border border-border/50 bg-card/50 backdrop-blur-sm">
+              <div className="relative rounded-3xl overflow-hidden bg-card/50 backdrop-blur-sm">
                 <img
-                  src="/images/hero-illustration.jpg"
+                  src="/src/assets/robot-removebg-preview.png"
                   alt="AI Real Estate Price Prediction Illustration"
                   width={600}
                   height={600}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
                 />
               </div>
 

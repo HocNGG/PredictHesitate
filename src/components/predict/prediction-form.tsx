@@ -1,11 +1,13 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Sparkles } from "lucide-react"
+import { Loader2, MapPinned, Sparkles } from "lucide-react"
 import { DISTRICTS, PROPERTY_TYPES } from "@/constants/predict-options"
+import { geocodeAddress } from "@/api/geocode"
+import { MapContainer, TileLayer, CircleMarker, useMapEvents, useMap } from "react-leaflet"
 
 interface PredictionFormProps {
   onPredict: (data: PredictionInput) => void
@@ -21,6 +23,25 @@ export interface PredictionInput {
   frontage: number | null
   bedrooms: number | null
   floors: number | null
+}
+
+function MapClickHandler({
+  onPick,
+}: {
+  onPick: (lat: number, lng: number) => void
+}) {
+  useMapEvents({
+    click(e) {
+      onPick(e.latlng.lat, e.latlng.lng)
+    },
+  })
+  return null
+}
+
+function MapFlyTo({ lat, lng }: { lat: number; lng: number }) {
+  const map = useMap()
+  map.setView([lat, lng], 13, { animate: true })
+  return null
 }
 
 export function PredictionForm({ onPredict, isLoading }: PredictionFormProps) {
@@ -43,6 +64,37 @@ export function PredictionForm({ onPredict, isLoading }: PredictionFormProps) {
     bedrooms: "2",
     floors: "",
   })
+  const [addressInput, setAddressInput] = useState("")
+  const [geocodeLoading, setGeocodeLoading] = useState(false)
+  const [geocodeError, setGeocodeError] = useState<string | null>(null)
+  const [resolvedAddress, setResolvedAddress] = useState<string | null>(null)
+
+  const latNum = Number(formData.lat)
+  const lngNum = Number(formData.lng)
+  const markerPosition = useMemo<[number, number]>(() => {
+    if (Number.isFinite(latNum) && Number.isFinite(lngNum)) return [latNum, lngNum]
+    return [10.78, 106.7]
+  }, [latNum, lngNum])
+
+  const setLatLng = (lat: number, lng: number) => {
+    setFormData((prev) => ({ ...prev, lat: lat.toFixed(6), lng: lng.toFixed(6) }))
+  }
+
+  const handleGeocode = async () => {
+    if (!addressInput.trim()) return
+    setGeocodeLoading(true)
+    setGeocodeError(null)
+    setResolvedAddress(null)
+    try {
+      const res = await geocodeAddress(addressInput.trim())
+      setLatLng(res.x, res.y)
+      setResolvedAddress(res.address)
+    } catch (err) {
+      setGeocodeError(err instanceof Error ? err.message : "Không thể chuyển đổi địa chỉ.")
+    } finally {
+      setGeocodeLoading(false)
+    }
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -207,6 +259,42 @@ export function PredictionForm({ onPredict, isLoading }: PredictionFormProps) {
                 className="bg-white text-black"
               />
             </div>
+          </div>
+
+          <div className="space-y-3 rounded-lg border p-4">
+            <div className="space-y-2">
+              <Label htmlFor="address">Nhập địa chỉ để tự điền tọa độ</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="address"
+                  type="text"
+                  placeholder="Ví dụ: 123 Nguyễn Hữu Thọ, Quận 7"
+                  value={addressInput}
+                  onChange={(e) => setAddressInput(e.target.value)}
+                  className="bg-white text-black"
+                />
+                <Button type="button" variant="outline" onClick={handleGeocode} disabled={geocodeLoading || !addressInput.trim()}>
+                  {geocodeLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <MapPinned className="h-4 w-4" />}
+                </Button>
+              </div>
+              {geocodeError ? <p className="text-sm text-destructive">{geocodeError}</p> : null}
+              {resolvedAddress ? <p className="text-sm text-muted-foreground">Địa chỉ chuẩn hóa: {resolvedAddress}</p> : null}
+            </div>
+
+            <div className="overflow-hidden rounded-lg border">
+              <MapContainer center={markerPosition} zoom={12} className="h-64 w-full">
+                <TileLayer
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                <MapClickHandler onPick={setLatLng} />
+                <MapFlyTo lat={markerPosition[0]} lng={markerPosition[1]} />
+                <CircleMarker center={markerPosition} radius={8} pathOptions={{ color: "#2563eb", fillOpacity: 0.8 }} />
+              </MapContainer>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Bạn có thể click trực tiếp trên bản đồ để chọn vị trí và tự động điền tọa độ x/y.
+            </p>
           </div>
 
           <Button
