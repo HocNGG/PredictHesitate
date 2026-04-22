@@ -72,13 +72,30 @@ export function Hero() {
               {/* Image container */}
               <div className="relative rounded-3xl overflow-hidden bg-card/50 backdrop-blur-sm">
                 <img
-                  src="/src/assets/robot-removebg-preview.png"
+                  src="/src/assets/robotanh.png"
                   alt="AI Real Estate Price Prediction Illustration"
                   width={600}
                   height={600}
+                  style={{
+                    filter: "brightness(0.8)",
+                    opacity: 0.5,
+                  }}
                   className="w-full h-full object-contain"
                 />
-              </div>
+                {/* cho ảnh dưới đè lên ảnh trên
+                nhưng có opacity 0.5
+                và position: absolute
+                */}
+                <img
+                  className="absolute top-0 left-0 w-full h-full object-contain"
+                  style={{
+                    zIndex: 10,
+                    filter: "brightness(1.2)",
+                  }}
+                  src="/src/assets/anhrobotdep.png"
+                  alt="AI Real Estate Price Prediction Illustration"
+                />
+              </div>  
 
               {/* Floating stats cards */}
               <div className="absolute -bottom-4 -left-4 bg-card/90 backdrop-blur-md border border-border/50 rounded-xl p-4 shadow-xl">
